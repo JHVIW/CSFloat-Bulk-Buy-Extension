@@ -38,6 +38,25 @@
 	}
 
 	/// <summary>
+	/// Triggers the lazy-loader: scroll fully down, nudge back up so the page
+	/// registers the scroll, then go down again to load the next batch.
+	/// </summary>
+	async function ScrollToLoadMore()
+	{
+		const iBottom = document.documentElement.scrollHeight;
+
+		window.scrollTo(0, iBottom);
+		await Sleep(300);
+
+		// A small upward nudge so the next downward scroll fires the loader.
+		window.scrollBy(0, -500);
+		await Sleep(300);
+
+		window.scrollTo(0, document.documentElement.scrollHeight);
+		await Sleep(500);
+	}
+
+	/// <summary>
 	/// Combines the relevant textual properties of an element so it can be
 	/// searched by keyword.
 	/// </summary>
@@ -276,76 +295,66 @@
 	//#region Global Functions
 
 	/// <summary>
-	/// Scrolls the page down to trigger lazy-loading until at least iCount
-	/// cards are present, or until no more cards load.
-	/// </summary>
-	async function EnsureCardsLoaded(iCount)
-	{
-		let iLast = FindCards().length;
-		let iStable = 0;
-
-		// Keep scrolling while we need more cards and new ones keep loading.
-		while (FindCards().length < iCount && iStable < 4)
-		{
-			window.scrollTo(0, document.documentElement.scrollHeight);
-			await Sleep(500);
-
-			const iNow = FindCards().length;
-			if (iNow > iLast)
-			{
-				iLast = iNow;
-				iStable = 0;
-			}
-			else
-			{
-				// No growth this round; allow a few retries before giving up.
-				iStable++;
-			}
-		}
-
-		// Return to the top so adding starts from the first listing.
-		window.scrollTo(0, 0);
-	}
-
-	/// <summary>
-	/// Loads enough cards and then adds the first iCount listings to the cart.
+	/// Adds the first iCount listings to the cart, clicking as it scrolls so
+	/// new listings keep loading until the target is reached (or no more load).
 	/// </summary>
 	async function AddFirst(iCount)
 	{
-		await EnsureCardsLoaded(iCount);
-		return ClickFirst(iCount, IsAddButton);
-	}
-
-	/// <summary>
-	/// Clicks the first iCount buttons that match the predicate as fast as
-	/// possible, in card order.
-	/// </summary>
-	function ClickFirst(iCount, fnPredicate)
-	{
-		const arrCards = FindCards();
 		let iClicked = 0;
 		let iSkipped = 0;
+		let iStable = 0;
 
-		for (let i = 0; i < arrCards.length && iClicked < iCount; i++)
+		// Keep going until the target is met or no new cards load after scrolling.
+		while (iClicked < iCount && iStable < 8)
 		{
-			const cBtn = FindButtonInCard(arrCards[i], fnPredicate);
-			if (!cBtn)
+			const arrCards = FindCards();
+			let bProgressed = false;
+
+			// Process every not-yet-handled card that is currently loaded.
+			for (let i = 0; i < arrCards.length && iClicked < iCount; i++)
 			{
-				continue;
+				const oCard = arrCards[i];
+				if (oCard.getAttribute("data-csfloat-processed") === "1")
+				{
+					continue;
+				}
+
+				const cBtn = FindButtonInCard(oCard, IsAddButton);
+				if (!cBtn)
+				{
+					// No add button yet; leave unmarked so we can retry later.
+					continue;
+				}
+
+				oCard.setAttribute("data-csfloat-processed", "1");
+				bProgressed = true;
+
+				// Skip disabled (e.g. unavailable) listings.
+				if (IsDisabled(cBtn))
+				{
+					iSkipped++;
+					continue;
+				}
+
+				cBtn.click();
+				iClicked++;
 			}
 
-			// Skip disabled (e.g. unavailable) listings.
-			if (IsDisabled(cBtn))
+			if (iClicked >= iCount)
 			{
-				iSkipped++;
-				continue;
+				break;
 			}
 
-			cBtn.click();
-			iClicked++;
+			// Wiggle-scroll to trigger loading of the next listings.
+			await ScrollToLoadMore();
+
+			// Count a "stable" round only when nothing new was processed.
+			iStable = bProgressed ? 0 : iStable + 1;
 		}
 
-		return { clicked: iClicked, skipped: iSkipped, totalCards: arrCards.length };
+		// Return to the top.
+		window.scrollTo(0, 0);
+		return { clicked: iClicked, skipped: iSkipped, totalCards: FindCards().length };
 	}
 
 	/// <summary>
