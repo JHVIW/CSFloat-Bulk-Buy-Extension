@@ -8,6 +8,14 @@ where you otherwise have to click **Add to cart** on every item by hand.
 
 ---
 
+## Demo
+
+<video src="demo.mov" controls width="600"></video>
+
+If the player does not show, [watch the demo here](demo.mov).
+
+---
+
 ## Features
 
 - **Add first N to cart:** clicks the add-to-cart button on the first *N* listings, in page order, as fast as the browser allows (no delay).
