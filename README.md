@@ -10,9 +10,9 @@ where you otherwise have to click **Add to cart** on every item by hand.
 
 ## Demo
 
-<video src="https://github.com/JHVIW/CSFloat-Bulk-Buy-Extension/raw/refs/heads/main/demo.mov" controls width="600"></video>
+<video src="https://github.com/JHVIW/CSFloat-Bulk-Buy-Extension/raw/refs/heads/main/demo.mp4" controls width="600"></video>
 
-If the player does not show, [watch the demo here](https://github.com/JHVIW/CSFloat-Bulk-Buy-Extension/raw/refs/heads/main/demo.mov).
+If the player does not show, [watch the demo here](https://github.com/JHVIW/CSFloat-Bulk-Buy-Extension/raw/refs/heads/main/demo.mp4).
 
 ---
 
