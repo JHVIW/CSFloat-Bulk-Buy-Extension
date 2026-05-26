@@ -11,7 +11,7 @@ where you otherwise have to click **Add to cart** on every item by hand.
 ## Features
 
 - **Add first N to cart** — clicks the add-to-cart button on the first *N* listings, in page order, as fast as the browser allows (no delay).
-- **Click-as-you-scroll** — when you ask for more than a page holds, it clicks the loaded listings, scrolls to load the next batch, and keeps going until the target is reached (or nothing more loads).
+- **Click-as-you-scroll** — when you ask for more than a page holds, it clicks the loaded listings, then wiggle-scrolls (all the way down, a nudge back up, then down again) to trigger the lazy-loader, and keeps going until the target is reached (or nothing more loads).
 - **Remove all from cart** — opens the cart, clicks **Clear** to empty it, and closes the cart again. Falls back to removing items one by one if no Clear button is present.
 - **Dynamic label** — the add button shows the exact amount you typed, e.g. *Add first 25 to cart*.
 - Text-only, light-blue UI. No tracking, no network calls of its own.
@@ -54,8 +54,9 @@ The extension is plain Manifest V3 with a popup and a content script.
 | `icons/` | Toolbar icons (16/32/48/128 px). |
 
 **Adding** — `content.js` finds the `<item-card>` elements and the
-add-to-cart button inside each, then clicks them in order, scrolling to load
-more when needed.
+add-to-cart button inside each, then clicks them in order. When more listings
+are needed it wiggle-scrolls — fully down, a small nudge up, then down again —
+to trigger CSFloat's lazy-loader, and repeats until the target is reached.
 
 **Removing** — the cart is a checkout overlay. The script clicks the navbar
 cart toggle to open it, clicks **Clear**, then closes the overlay.
